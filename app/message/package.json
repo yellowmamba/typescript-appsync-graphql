@@ -1,0 +1,15 @@
+{
+  "name": "format-message",
+  "version": "0.1.0",
+  "description": "A simple typescript node project for AWS Lambda.",
+  "scripts": {},
+  "keywords": [
+    "node",
+    "typescript",
+    "lambda"
+  ],
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^12.0.0"
+  }
+}

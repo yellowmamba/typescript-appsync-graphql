@@ -5,6 +5,8 @@
 * AWS CLI already configured with Administrator permission
 * [nodejs6.10 installed](https://nodejs.org/en/download/releases/)
 * [Docker installed](https://www.docker.com/community-edition)
+* Typescript installed
+
 
 ## Packaging and deployment
 

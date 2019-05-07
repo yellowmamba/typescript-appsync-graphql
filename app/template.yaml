@@ -10,12 +10,12 @@ Resources:
   HelloWorldFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: hello-world/
-      Handler: app.lambdaHandler
+      CodeUri: message/
+      Handler: dist/index.lambdaHandler
       Runtime: nodejs6.10
       Events:
         HelloWorld:
           Type: Api
           Properties:
-            Path: /hello
+            Path: /message
             Method: get
