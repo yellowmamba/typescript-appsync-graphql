@@ -1,6 +1,9 @@
  #!/usr/bin/env bash
 
-sam build
+echo "Compiling TypeScript code..."
+cd message-lambda
+tsc
+cd ..
 
 echo "Packaging code... S3 bucket is ${S3_BUCKET}"
 sam package \
