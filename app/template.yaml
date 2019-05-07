@@ -7,15 +7,15 @@ Globals:
     Timeout: 3
 
 Resources:
-  MessageFunction:
+  HelloWorldFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: message-lambda/dist/
-      Handler: index.handler
+      CodeUri: ./handler.zip
+      Handler: hello-world.handler
       Runtime: nodejs6.10
       Events:
-        Message:
+        HelloWorld:
           Type: Api
           Properties:
-            Path: /message
+            Path: /hello
             Method: get

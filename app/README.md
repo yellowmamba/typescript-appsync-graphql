@@ -1,12 +1,14 @@
 # AWS SAM Lambda with NodeJS / Typescript
 
+This repo creates a lambda function using AWS SAM, NodeJS and Typescript. The lambda implementation follows 
+[this article](https://scotch.io/@nwayve/how-to-build-a-lambda-function-in-typescript) in structure.
+
 ## Requirements
 
 * AWS CLI already configured with Administrator permission
 * [nodejs6.10 installed](https://nodejs.org/en/download/releases/)
 * [Docker installed](https://www.docker.com/community-edition)
 * Typescript installed
-
 
 ## Packaging and deployment
 
@@ -35,3 +37,35 @@ cd hello-world
 npm install
 npm run test
 ```
+
+## Directory initialization
+
+Make sure TypeScript is installed globally:
+```
+npm i -g typescript
+```
+
+Initialize directory and typescript config. Both `package.json` and `tsconfig.json` have been modified.
+```
+npm init -y
+tsc --init
+```
+
+Install node type defintions:
+```
+npm i -D @types/node
+```
+
+Install `ts-node` globally:
+```
+npm i -g ts-node
+```
+
+## Compilation:
+
+```
+tsc
+```
+
+- This will build the `index.js` file in the ./dist dir as defined in `tsconfig.json`.  
+- Running `tsc src/index.ts` will ignore the config file.  
