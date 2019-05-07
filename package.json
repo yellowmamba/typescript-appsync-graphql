@@ -2,7 +2,9 @@
   "name": "format-message",
   "version": "0.1.0",
   "description": "A simple typescript node project for AWS Lambda.",
-  "scripts": {},
+  "scripts": {
+    "build": "./node_modules/typescript/bin/tsc"
+  },
   "keywords": [
     "node",
     "typescript",
@@ -10,6 +12,7 @@
   ],
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^12.0.0"
+    "@types/node": "^12.0.0",
+    "typescript": "^3.4.5"
   }
 }

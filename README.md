@@ -28,44 +28,8 @@ STACK_NAME=
 ./deploy.sh
 ```
 
-## Testing
-
-We use `mocha` for testing our code and it is already added in `package.json` under `scripts`, so that we can simply run the following command to run our tests:
-
-```bash
-cd hello-world
-npm install
-npm run test
-```
-
-## Directory initialization
-
-Make sure TypeScript is installed globally:
-```
-npm i -g typescript
-```
-
-Initialize directory and typescript config. Both `package.json` and `tsconfig.json` have been modified.
-```
-npm init -y
-tsc --init
-```
-
-Install node type defintions:
-```
-npm i -D @types/node
-```
-
-Install `ts-node` globally:
-```
-npm i -g ts-node
-```
-
-## Compilation:
+## Build
 
 ```
-tsc
+npm run build
 ```
-
-- This will build the `index.js` file in the ./dist dir as defined in `tsconfig.json`.  
-- Running `tsc src/index.ts` will ignore the config file.  
