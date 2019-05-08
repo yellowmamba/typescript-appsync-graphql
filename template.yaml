@@ -12,7 +12,7 @@ Resources:
     Properties:
       CodeUri: ./handler.zip
       Handler: hello-world.handler
-      Runtime: nodejs6.10
+      Runtime: nodejs8.10
       Events:
         HelloWorld:
           Type: Api

@@ -25,11 +25,9 @@ STACK_NAME=
 ```
 
 ```
-./deploy.sh
-```
+# Package and Build
+make
 
-## Build
-
-```
-npm run build
+# Deploy
+make deploy
 ```
