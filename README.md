@@ -1,7 +1,6 @@
 # AWS SAM Lambda with NodeJS / Typescript
 
-This repo creates a lambda function using AWS SAM, NodeJS and Typescript. The lambda implementation follows 
-[this article](https://scotch.io/@nwayve/how-to-build-a-lambda-function-in-typescript) in structure.
+This repo creates a lambda function using AWS SAM, NodeJS and Typescript.
 
 ## Requirements
 
