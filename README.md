@@ -19,8 +19,8 @@ aws s3 mb s3://BUCKET_NAME
 
 Set the follow environment variables:
 ```
-S3_BUCKET=
-STACK_NAME=
+export S3_BUCKET=
+export STACK_NAME=
 ```
 
 ```
