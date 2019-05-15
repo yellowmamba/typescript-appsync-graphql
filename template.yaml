@@ -1,21 +1,183 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Sample SAM app using NodeJS and Typescript
+Description: GraphQL Messages API using NodeJS and Typescript
+
+Parameters:
+  APIName:
+    Type: String
+    Description: The name of the GraphQL API
+    MinLength: 3
+    MaxLength: 20
+    AllowedPattern: '^[a-zA-Z][a-zA-Z0-9_]*$'
+    Default: MessagesGraphQLAPI
 
 Globals:
   Function:
     Timeout: 3
+    Runtime: nodejs10.x
 
 Resources:
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function
+
+#  HelloWorldFunction:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      CodeUri: ./handler.zip
+#      Handler: hello-world.handler
+#      Events:
+#        HelloWorld:
+#          Type: Api
+#          Properties:
+#            Path: /hello
+#            Method: get
+
+  DynamoDBMessagesTable:
+    Description: "Data store for AWS AppSync Messages"
+    Type: AWS::DynamoDB::Table
     Properties:
-      CodeUri: ./handler.zip
-      Handler: hello-world.handler
-      Runtime: nodejs8.10
-      Events:
-        HelloWorld:
-          Type: Api
-          Properties:
-            Path: /hello
-            Method: get
+      TableName: !Sub ${APIName}-messages-table
+      AttributeDefinitions:
+        - AttributeName: deviceId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: deviceId
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  AppSyncApi:
+    Type: "AWS::AppSync::GraphQLApi"
+    Description: "The GraphQL API for the Messages"
+    Properties:
+      AuthenticationType: "AWS_IAM"
+      Name: !Sub ${APIName}
+
+  AppSyncSchema:
+    Type: "AWS::AppSync::GraphQLSchema"
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      DefinitionS3Location: ./schema.graphql
+
+  AppSyncDynamoDBAccessRole:
+    Type: AWS::IAM::Role
+    Description: "An IAM Role to allow AWS AppSync to access the dynamodb table"
+    Properties:
+      RoleName: !Sub ${APIName}-appsync-dynamodb-role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AppSyncDynamoDBPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                Resource: !Join [ "", [ !GetAtt DynamoDBMessagesTable.Arn, "*" ] ]
+
+  AppSyncMessagesTableDataSource:
+    Type: "AWS::AppSync::DataSource"
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Name: !Sub ${APIName}_messages_table
+      Description: "The Messages Table AppSync Data Source"
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt AppSyncDynamoDBAccessRole.Arn
+      DynamoDBConfig:
+        TableName: !Ref DynamoDBMessagesTable
+        AwsRegion: !Sub ${AWS::Region}
+
+  # AppSync API Resolvers:
+
+  AppSyncGetMessageQueryResolver:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncSchema
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Query
+      FieldName: getMessage
+      DataSourceName: !GetAtt AppSyncMessagesTableDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "GetItem",
+          "key": {
+            "deviceId": $util.dynamodb.toDynamoDBJson($ctx.args.deviceId),
+            "timestamp": $util.dynamodb.toDynamoDBJson($ctx.args.timestamp)
+          }
+        }
+      ResponseMappingTemplate: "$util.toJson($ctx.result)"
+
+  AppSyncGetDeviceMessagesQueryResolver:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncSchema
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Query
+      FieldName: getDeviceMessages
+      DataSourceName: !GetAtt AppSyncMessagesTableDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "Query",
+          "query": {
+            "expression": "deviceId = :deviceId",
+            "expressionValues": {
+              ":deviceId": $util.dynamodb.toDynamoDBJson($ctx.args.deviceId)
+            }
+          }
+        }
+      ResponseMappingTemplate: "$utils.toJson($context.result.items)"
+
+  AppSyncStoreMessageMutationResolver:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncSchema
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Mutation
+      FieldName: storeMessage
+      DataSourceName: !GetAtt AppSyncMessagesTableDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "PutItem",
+          "key": {
+            "deviceId": { "S": "${context.arguments.deviceId}" },
+            "timestamp": { "N": "${context.arguments.timestamp}" }
+          },
+          "attributeValues": {
+            "message": { "S": "${context.arguments.message}" },
+            "messageType": { "S": "${context.arguments.messageType}" }
+          }
+        }
+      ResponseMappingTemplate: "$util.toJson($ctx.result)"
+
+
+Outputs:
+
+  DynamoDBMessagesTableName:
+    Description: The name of the DynamoDB Table
+    Value: !Ref DynamoDBMessagesTable
+
+  GraphQLApiEndpoint:
+    Description: The URL to the GraphQL Endpoint
+    Value: !GetAtt AppSyncApi.GraphQLUrl
+
+  GraphQLApiId:
+    Description: The API ID of the GraphQL API
+    Value: !GetAtt AppSyncApi.ApiId

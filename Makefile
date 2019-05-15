@@ -30,4 +30,4 @@ deploy:
 	sam deploy \
 		--template-file packaged.yaml \
 		--stack-name "${STACK_NAME}" \
-		--capabilities CAPABILITY_IAM
+		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM

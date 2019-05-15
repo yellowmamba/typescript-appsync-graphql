@@ -1,0 +1,20 @@
+type Schema {
+    query: Query
+    mutation: Mutation
+}
+
+type Query {
+    getMessage(deviceId: String!, timestamp: Int!): Message,
+    getDeviceMessages(deviceId: String!): [Message]
+}
+
+type Mutation {
+    storeMessage(deviceId: String!, timestamp: Int!, message: String, messageType: String): Message
+}
+
+type Message {
+    deviceId: String!
+    timestamp: Int!
+    message: String
+    messageType: String
+}

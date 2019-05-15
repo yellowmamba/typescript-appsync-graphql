@@ -5,3 +5,6 @@ dist
 # AWS SAM
 packaged.yaml
 .aws-sam/
+
+# IDE
+.idea/
