@@ -23,6 +23,10 @@ interface Message {
     messageType: string
 }
 
+/**
+ * Adds a timestamp to the incoming message data
+ * @param messageInputData
+ */
 const constructMessageData = (messageInputData: EventInput): Message => {
     return {
         deviceId: messageInputData.arguments.deviceId,
@@ -33,19 +37,16 @@ const constructMessageData = (messageInputData: EventInput): Message => {
 }
 
 export const handler = async (event: EventInput, _: any): Promise<any> => {
-    logger.info(`Table name is: ${TableName}`);
-
+    logger.info(`Storing message to: ${TableName}`);
     const messageData = constructMessageData(event);
-    logger.info(messageData);
 
     const dbParams: DynamoDB.DocumentClient.PutItemInput = {
         TableName,
-        Item: messageData,
-        ReturnConsumedCapacity: "TOTAL"
+        Item: messageData
     };
 
     try {
-        const DDBRes = await dynamodb.put(dbParams).promise();
+        await dynamodb.put(dbParams).promise();
         logger.info('Successfully stored message:', dbParams);
         return dbParams.Item;
       } catch (err) {
