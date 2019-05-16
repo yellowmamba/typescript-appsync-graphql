@@ -3,7 +3,29 @@
   "version": "0.1.0",
   "description": "A simple typescript node project for AWS Lambda.",
   "scripts": {
-    "build": "./node_modules/typescript/bin/tsc"
+    "build": "./node_modules/typescript/bin/tsc",
+    "test": "jest"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "coverageReporters": [
+      "text"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json"
+      }
+    },
+    "testMatch": [
+      "**/test*.ts"
+    ]
   },
   "keywords": [
     "node",
@@ -12,7 +34,15 @@
   ],
   "license": "ISC",
   "devDependencies": {
+    "@types/jest": "^24.0.13",
     "@types/node": "^12.0.0",
+    "jest": "^24.8.0",
+    "ts-jest": "^24.0.2",
     "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "@types/bunyan": "^1.8.6",
+    "aws-sdk": "^2.451.0",
+    "bunyan": "^1.8.12"
   }
 }

@@ -5,7 +5,7 @@ This repo creates a lambda function using AWS SAM, NodeJS and Typescript.
 ## Requirements
 
 * AWS CLI already configured with Administrator permission
-* [nodejs8.10 installed](https://nodejs.org/en/download/releases/)
+* [nodejs10.x installed](https://nodejs.org/en/download/releases/)
 * [Docker installed](https://www.docker.com/community-edition)
 * Typescript installed
 
@@ -31,22 +31,31 @@ make
 make deploy
 ```
 
+## Testing
+
+The GraphQL lambdas can be tested locally against the [Amazon DynamoDB docker image](https://hub.docker.com/r/amazon/dynamodb-local):
+```
+docker run -p 8000:8000 amazon/dynamodb-local
+```
+
 ## Example Queries
 
 ```
 mutation storeMessage {
       storeMessage(
         deviceId: "F123", 
-        timestamp: 1000, 
-        message: "A test message"
+        message: "A new test message",
+        messageType: "chat"
       ) {
-    deviceId
+    deviceId,
+    timestamp
   }
 }
 
 query{
   getDeviceMessages(deviceId: "F123") {
-   message
+   message,
+   timestamp
   }
 }
 ```
@@ -68,7 +77,7 @@ Result:
     "getMessage": {
       "deviceId": "F12345",
       "message": "Device Active",
-      "messageType": "device_active_message"
+      "messageType": "device_active"
     }
   }
 }
@@ -102,18 +111,4 @@ Result:
       }
     ]
   }
-```
-
-## Example Mutations
-
-```
-mutation storeMessage {
-      storeMessage(
-        deviceId: "F123", 
-        timestamp: 1000, 
-        message: "A test message"
-      ) {
-    deviceId
-  }
-}
 ```

@@ -15,20 +15,11 @@ Globals:
   Function:
     Timeout: 3
     Runtime: nodejs10.x
+    Environment:
+      Variables:
+        DYNAMODB_TABLE: !Ref DynamoDBMessagesTable
 
 Resources:
-
-#  HelloWorldFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      CodeUri: ./handler.zip
-#      Handler: hello-world.handler
-#      Events:
-#        HelloWorld:
-#          Type: Api
-#          Properties:
-#            Path: /hello
-#            Method: get
 
   DynamoDBMessagesTable:
     Description: "Data store for AWS AppSync Messages"
@@ -51,7 +42,7 @@ Resources:
     Type: "AWS::AppSync::GraphQLApi"
     Description: "The GraphQL API for the Messages"
     Properties:
-      AuthenticationType: "AWS_IAM"
+      AuthenticationType: "API_KEY"
       Name: !Sub ${APIName}
 
   AppSyncSchema:
@@ -64,7 +55,6 @@ Resources:
     Type: AWS::IAM::Role
     Description: "An IAM Role to allow AWS AppSync to access the dynamodb table"
     Properties:
-      RoleName: !Sub ${APIName}-appsync-dynamodb-role
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -94,13 +84,36 @@ Resources:
     Type: "AWS::AppSync::DataSource"
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
-      Name: !Sub ${APIName}_messages_table
+      Name: !Sub ${APIName}_AppSyncMessagesTableDataSource
       Description: "The Messages Table AppSync Data Source"
       Type: AMAZON_DYNAMODB
       ServiceRoleArn: !GetAtt AppSyncDynamoDBAccessRole.Arn
       DynamoDBConfig:
         TableName: !Ref DynamoDBMessagesTable
         AwsRegion: !Sub ${AWS::Region}
+
+  AppSyncLambdaServiceRole:
+    Type: AWS::IAM::Role
+    Description: "An IAM Role to allow AWS AppSync to invoke lambda functions"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AppSyncInvokeLambdaPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt StoreMessageLambdaFunction.Arn
 
   # AppSync API Resolvers:
 
@@ -151,22 +164,38 @@ Resources:
       ApiId: !GetAtt AppSyncApi.ApiId
       TypeName: Mutation
       FieldName: storeMessage
-      DataSourceName: !GetAtt AppSyncMessagesTableDataSource.Name
+      DataSourceName: !GetAtt StoreMessageLambdaDataSource.Name
       RequestMappingTemplate: |
         {
           "version": "2017-02-28",
-          "operation": "PutItem",
-          "key": {
-            "deviceId": { "S": "${context.arguments.deviceId}" },
-            "timestamp": { "N": "${context.arguments.timestamp}" }
-          },
-          "attributeValues": {
-            "message": { "S": "${context.arguments.message}" },
-            "messageType": { "S": "${context.arguments.messageType}" }
+          "operation": "Invoke",
+          "payload": {
+            "field": "storeMessage",
+            "arguments": $utils.toJson($context.arguments)
           }
         }
-      ResponseMappingTemplate: "$util.toJson($ctx.result)"
+      ResponseMappingTemplate: |
+        $utils.toJson($context.result)
 
+  StoreMessageLambdaDataSource:
+    Type: "AWS::AppSync::DataSource"
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Name: !Sub ${APIName}_StoreMessageLambdaDataSource
+      Description: "The AppSync Lambda Data Source"
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !GetAtt StoreMessageLambdaFunction.Arn
+
+  StoreMessageLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./handler.zip
+      Handler: storeMessage.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDBMessagesTable
 
 Outputs:
 
