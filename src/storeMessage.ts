@@ -1,16 +1,18 @@
 'use strict'
 
-import { DynamoDB } from 'aws-sdk';
+import {DynamoDB} from 'aws-sdk';
 import bunyan from 'bunyan';
 
 const dynamodb = new DynamoDB.DocumentClient();
-const TableName = process.env.MESSAGES_DYNAMODB_TABLE || '';
+const MessagesTableName = process.env.MESSAGES_DYNAMODB_TABLE || '';
 const logger = bunyan.createLogger({name: "storeMessageLambda"});
 
 export interface StoreMessageEventInput {
-    deviceId: string,
-    message: string,
-    messageType: string
+    arguments: {
+        deviceId: string,
+        message: string,
+        messageType: string
+    }
 }
 
 interface Message {
@@ -26,19 +28,19 @@ interface Message {
  */
 const constructMessageData = (messageInputData: StoreMessageEventInput): Message => {
     return {
-        deviceId: messageInputData.deviceId,
+        deviceId: messageInputData.arguments.deviceId,
         timestamp: new Date().getTime(),
-        message: messageInputData.message,
-        messageType: messageInputData.messageType
+        message: messageInputData.arguments.message,
+        messageType: messageInputData.arguments.messageType
     }
 }
 
-export const StoreMessage = async (event: StoreMessageEventInput): Promise<any> => {
-    logger.info(`Storing message to: ${TableName}`);
+export const handler = async (event: StoreMessageEventInput): Promise<any> => {
+    logger.info(`Storing message to: ${MessagesTableName}`);
     const messageData = constructMessageData(event);
 
     const dbParams: DynamoDB.DocumentClient.PutItemInput = {
-        TableName,
+        TableName: MessagesTableName,
         Item: messageData
     };
 
@@ -46,7 +48,7 @@ export const StoreMessage = async (event: StoreMessageEventInput): Promise<any> 
         await dynamodb.put(dbParams).promise();
         logger.info('Successfully stored message:', dbParams);
         return dbParams.Item;
-      } catch (err) {
+    } catch (err) {
         logger.error('ERROR:', err);
         return err;
     }

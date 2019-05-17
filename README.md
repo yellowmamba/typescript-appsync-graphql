@@ -31,6 +31,10 @@ make
 make deploy
 ```
 
+#### Packaging notes:
+- The `devDependencies` are installed in order for `tsc` to compile the TypeScript code to Javascript
+- The dev `node_modules` are then removed and the production dependencies are installed and zipped in the lambda package
+
 ## Testing
 
 The GraphQL lambdas can be tested locally against the [Amazon DynamoDB docker image](https://hub.docker.com/r/amazon/dynamodb-local):
@@ -68,34 +72,15 @@ query{
    messageType
   }
 }
-```
 
-#### Get all messages for a specific device
-```
+# See all messages for the device
 query{
-  alleMessages(deviceId: "F12345") {
-   deviceId,
-   message
+  getDevice(deviceId: "F123") {
+    deviceName,
+    messages {
+      timestamp,
+      message
+    }
   }
 }
-
-Result:
-
-{
-  "data": {
-    "allMessages": [
-      {
-        "deviceId": "F12345",
-        "message": "A first test message"
-      },
-      {
-        "deviceId": "F12345",
-        "message": "Second message for this device"
-      },
-      {
-        "deviceId": "F12345",
-        "message": "Device Active"
-      }
-    ]
-  }
 ```
