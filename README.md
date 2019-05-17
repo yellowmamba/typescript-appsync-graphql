@@ -41,7 +41,7 @@ docker run -p 8000:8000 amazon/dynamodb-local
 ## Example Queries
 
 ```
-mutation storeMessage {
+mutation {
       storeMessage(
         deviceId: "F123", 
         message: "A new test message",
@@ -52,33 +52,20 @@ mutation storeMessage {
   }
 }
 
-query{
-  getDeviceMessages(deviceId: "F123") {
-   message,
-   timestamp
-  }
-}
-```
-
-#### Get a specific device message
-```
-query {
-  getMessage(deviceId: "F12345", timestamp: 9000) {
-    deviceId,
-    message,
-    messageType
-  }
-}
-
-Result:
-
+Returns:
 {
   "data": {
-    "getMessage": {
-      "deviceId": "F12345",
-      "message": "Device Active",
-      "messageType": "device_active"
+    "storeMessage": {
+      "deviceId": "F123",
+      "timestamp": 1558052249959,
     }
+  }
+}
+
+query{
+  getMessage(deviceId: "F123", timestamp: 1558052249959) {
+   message,
+   messageType
   }
 }
 ```
@@ -86,7 +73,7 @@ Result:
 #### Get all messages for a specific device
 ```
 query{
-  getDeviceMessages(deviceId: "F12345") {
+  alleMessages(deviceId: "F12345") {
    deviceId,
    message
   }
@@ -96,7 +83,7 @@ Result:
 
 {
   "data": {
-    "getDeviceMessages": [
+    "allMessages": [
       {
         "deviceId": "F12345",
         "message": "A first test message"

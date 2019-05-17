@@ -5,7 +5,8 @@ type Schema {
 
 type Query {
     getMessage(deviceId: String!, timestamp: AWSTimestamp!): Message,
-    getDeviceMessages(deviceId: String!): [Message]
+    allMessages(deviceId: String!): [Message],
+#    getDevice(deviceId: String): Device
 }
 
 type Mutation {
@@ -17,4 +18,10 @@ type Message {
     timestamp: AWSTimestamp!
     message: String!
     messageType: String!
+}
+
+type Device {
+    deviceId: String!,
+    deviceName: String,
+    messages: [Message]
 }

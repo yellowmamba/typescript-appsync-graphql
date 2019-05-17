@@ -4,16 +4,13 @@ import { DynamoDB } from 'aws-sdk';
 import bunyan from 'bunyan';
 
 const dynamodb = new DynamoDB.DocumentClient();
-const TableName = process.env.DYNAMODB_TABLE || '';
+const TableName = process.env.MESSAGES_DYNAMODB_TABLE || '';
 const logger = bunyan.createLogger({name: "storeMessageLambda"});
 
-export interface EventInput {
-    field: string,
-    arguments: {
-        deviceId: string,
-        message: string,
-        messageType: string
-    }
+export interface StoreMessageEventInput {
+    deviceId: string,
+    message: string,
+    messageType: string
 }
 
 interface Message {
@@ -27,16 +24,16 @@ interface Message {
  * Adds a timestamp to the incoming message data
  * @param messageInputData
  */
-const constructMessageData = (messageInputData: EventInput): Message => {
+const constructMessageData = (messageInputData: StoreMessageEventInput): Message => {
     return {
-        deviceId: messageInputData.arguments.deviceId,
+        deviceId: messageInputData.deviceId,
         timestamp: new Date().getTime(),
-        message: messageInputData.arguments.message,
-        messageType: messageInputData.arguments.messageType
+        message: messageInputData.message,
+        messageType: messageInputData.messageType
     }
 }
 
-export const handler = async (event: EventInput, _: any): Promise<any> => {
+export const StoreMessage = async (event: StoreMessageEventInput): Promise<any> => {
     logger.info(`Storing message to: ${TableName}`);
     const messageData = constructMessageData(event);
 

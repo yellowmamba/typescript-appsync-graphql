@@ -2,24 +2,24 @@
   "compilerOptions": {
     "target": "es2017",
     "module": "commonjs",
-    "rootDir": "src",
+    "rootDir": "./src",
     "outDir": "./dist",
-    "baseUrl": "./",
-    "typeRoots": [
-      "node_modules/@types"
+    "typeRoots": ["./typings"],
+    "lib": [
+      "es2015"
     ],
-
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
-//
-//    "noUnusedLocals": true,
-//    "noUnusedParameters": true,
     "types": [
       "node",
       "jest"
     ],
     "esModuleInterop": true,
-    "inlineSourceMap": true
-  }
+    "inlineSourceMap": true,
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": ["src/tests"]
 }

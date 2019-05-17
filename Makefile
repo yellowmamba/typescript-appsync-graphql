@@ -16,9 +16,12 @@ clean:
 	rm -rf ./dist
 	rm -f ./handler.zip
 	rm -f ./packaged.yaml
+	rm -rf ./node_modules
 
 package:
 	echo "package src and modules into zipped handler..."
+	rm -rf node_modules
+	npm install --production
 	cp -R node_modules dist && cd dist && zip -r -q ../handler.zip .
 
 	echo "package cloudformation template..."
@@ -35,4 +38,4 @@ deploy:
 		--stack-name "${STACK_NAME}" \
 		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
 
-deploy-stack: install build validate package deploy
+deploy-stack: clean install build validate package deploy

@@ -1,9 +1,9 @@
 {
-  "name": "format-message",
-  "version": "0.1.0",
-  "description": "A simple typescript node project for AWS Lambda.",
+  "name": "messages-graphql-api",
+  "version": "1.0.0",
+  "description": "Messages GraphQL API with Typescript and AWS AppSync.",
   "scripts": {
-    "build": "./node_modules/typescript/bin/tsc",
+    "build": "tsc",
     "test": "jest"
   },
   "jest": {
@@ -36,13 +36,14 @@
   "devDependencies": {
     "@types/jest": "^24.0.13",
     "@types/node": "^12.0.0",
+    "@types/aws-lambda": "^8.10.15",
+    "@types/bunyan": "^1.8.6",
     "jest": "^24.8.0",
     "ts-jest": "^24.0.2",
-    "typescript": "^3.4.5"
+    "typescript": "^3.4.5",
+    "aws-sdk": "^2.451.0"
   },
   "dependencies": {
-    "@types/bunyan": "^1.8.6",
-    "aws-sdk": "^2.451.0",
     "bunyan": "^1.8.12"
   }
 }
