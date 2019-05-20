@@ -3,8 +3,10 @@
 import {DynamoDB} from 'aws-sdk';
 import bunyan from 'bunyan';
 
-const dynamodb = new DynamoDB.DocumentClient();
-const DevicesTableName = process.env.DEVICES_DYNAMODB_TABLE || '';
+import {configureDynamoDB} from './utils/lambdaConfig'
+
+const dynamodb = configureDynamoDB();
+const TableName = process.env.DYNAMODB_TABLE || '';
 const logger = bunyan.createLogger({name: "getDeviceLambda"});
 
 export interface GetDeviceEventInput {
@@ -14,11 +16,11 @@ export interface GetDeviceEventInput {
 }
 
 export const handler = async (event: GetDeviceEventInput): Promise<any> => {
-    logger.info(`Getting message from: ${DevicesTableName}`);
+    logger.info(`Getting device from: ${TableName}`);
     logger.info(event);
 
     const dbParams: DynamoDB.DocumentClient.GetItemInput = {
-        TableName: DevicesTableName,
+        TableName,
         Key: {
             deviceId: event.arguments.deviceId
         }
@@ -26,7 +28,7 @@ export const handler = async (event: GetDeviceEventInput): Promise<any> => {
 
     try {
         const data = await dynamodb.get(dbParams).promise();
-        logger.info('Successfully got message:', data.Item);
+        logger.info('Successfully got device:', data.Item);
         return data.Item;
     } catch (err) {
         logger.error('ERROR:', err);

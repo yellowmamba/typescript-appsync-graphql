@@ -2,9 +2,10 @@
 
 import { DynamoDB } from 'aws-sdk';
 import bunyan from 'bunyan';
+import {configureDynamoDB} from './utils/lambdaConfig'
 
-const dynamodb = new DynamoDB.DocumentClient();
-const MessagesTableName = process.env.MESSAGES_DYNAMODB_TABLE || '';
+const dynamodb = configureDynamoDB();
+const TableName = process.env.DYNAMODB_TABLE || '';
 const logger = bunyan.createLogger({name: "getMessageLambda"});
 
 export interface GetMessageEventInput {
@@ -15,11 +16,11 @@ export interface GetMessageEventInput {
 }
 
 export const handler = async (event: GetMessageEventInput): Promise<any> => {
-    logger.info(`Getting message from: ${MessagesTableName}`);
+    logger.info(`Getting message from: ${TableName}`);
     logger.info(event);
 
     const dbParams: DynamoDB.DocumentClient.GetItemInput = {
-        TableName: MessagesTableName,
+        TableName,
         Key: {
             deviceId: event.arguments.deviceId,
             timestamp: event.arguments.timestamp

@@ -13,16 +13,20 @@ Parameters:
 
 Globals:
   Function:
+    CodeUri: ./handler.zip
     Runtime: nodejs10.x
     Timeout: 10
+    Environment:
+      Variables:
+        DYNAMODB_TABLE: !Ref DynamoDBTable
 
 Resources:
 
-  DynamoDBMessagesTable:
-    Description: "Data store for device Messages"
+  DynamoDBTable:
+    Description: "NoSQL DB for Message System"
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${APIName}-messages-table
+      TableName: !Sub ${APIName}-ddb-table
       AttributeDefinitions:
         - AttributeName: deviceId
           AttributeType: S
@@ -33,19 +37,6 @@ Resources:
           KeyType: HASH
         - AttributeName: timestamp
           KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
-
-  DynamoDBDevicesTable:
-    Description: "Data store for AWS Devices"
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${APIName}-devices-table
-      AttributeDefinitions:
-        - AttributeName: deviceId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: deviceId
-          KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
   AppSyncApi:
@@ -109,14 +100,10 @@ Resources:
   GetMessageLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./handler.zip
       Handler: getMessage.handler
-      Environment:
-        Variables:
-          MESSAGES_DYNAMODB_TABLE: !Ref DynamoDBMessagesTable
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref DynamoDBMessagesTable
+            TableName: !Ref DynamoDBTable
   GetMessageLambdaDataSource:
     Type: "AWS::AppSync::DataSource"
     Properties:
@@ -148,14 +135,10 @@ Resources:
   AllMessagesLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./handler.zip
       Handler: allMessages.handler
-      Environment:
-        Variables:
-          MESSAGES_DYNAMODB_TABLE: !Ref DynamoDBMessagesTable
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref DynamoDBMessagesTable
+            TableName: !Ref DynamoDBTable
   AllMessagesLambdaDataSource:
     Type: "AWS::AppSync::DataSource"
     Properties:
@@ -187,14 +170,10 @@ Resources:
   StoreMessageLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./handler.zip
       Handler: storeMessage.handler
-      Environment:
-        Variables:
-          MESSAGES_DYNAMODB_TABLE: !Ref DynamoDBMessagesTable
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref DynamoDBMessagesTable
+            TableName: !Ref DynamoDBTable
   StoreMessageLambdaDataSource:
     Type: "AWS::AppSync::DataSource"
     Properties:
@@ -206,6 +185,7 @@ Resources:
       LambdaConfig:
         LambdaFunctionArn: !GetAtt StoreMessageLambdaFunction.Arn
 
+  # TODO: fix nested relation for fetching the messages field
   GetDeviceQueryResolver:
     Type: "AWS::AppSync::Resolver"
     DependsOn: AppSyncSchema
@@ -228,12 +208,9 @@ Resources:
     Properties:
       CodeUri: ./handler.zip
       Handler: getDevice.handler
-      Environment:
-        Variables:
-          DEVICES_DYNAMODB_TABLE: !Ref DynamoDBDevicesTable
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref DynamoDBDevicesTable
+            TableName: !Ref DynamoDBTable
   GetDeviceLambdaDataSource:
     Type: "AWS::AppSync::DataSource"
     Properties:
@@ -247,13 +224,9 @@ Resources:
 
 Outputs:
 
-  DynamoDBMessagesTableName:
-    Description: The name of the DynamoDB Table for Messages
-    Value: !Ref DynamoDBMessagesTable
-
-  DynamoDBDevicesTableName:
-    Description: The name of the DynamoDB Table for Devices
-    Value: !Ref DynamoDBDevicesTable
+  DynamoDBTableName:
+    Description: The name of the DynamoDB Table
+    Value: !Ref DynamoDBTable
 
   GraphQLApiEndpoint:
     Description: The URL to the GraphQL Endpoint

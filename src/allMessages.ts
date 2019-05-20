@@ -2,9 +2,10 @@
 
 import {DynamoDB} from 'aws-sdk';
 import bunyan from 'bunyan';
+import {configureDynamoDB} from './utils/lambdaConfig'
 
-const dynamodb = new DynamoDB.DocumentClient();
-const MessagesTableName = process.env.MESSAGES_DYNAMODB_TABLE || '';
+const dynamodb = configureDynamoDB();
+const TableName = process.env.DYNAMODB_TABLE || '';
 const logger = bunyan.createLogger({name: "allMessagesLambda"});
 
 export interface AllMessagesEventInput {
@@ -14,11 +15,11 @@ export interface AllMessagesEventInput {
 }
 
 export const handler = async (event: AllMessagesEventInput): Promise<any> => {
-    logger.info(`Getting all messages from: ${MessagesTableName}`);
+    logger.info(`Getting all messages from: ${TableName}`);
     logger.info(event);
 
     const dbParams: DynamoDB.DocumentClient.QueryInput = {
-        TableName: MessagesTableName,
+        TableName,
         KeyConditionExpression: "#deviceId = :deviceId",
         ExpressionAttributeNames: {
             "#deviceId": "deviceId"

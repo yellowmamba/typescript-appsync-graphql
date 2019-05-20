@@ -2,9 +2,10 @@
 
 import {DynamoDB} from 'aws-sdk';
 import bunyan from 'bunyan';
+import {configureDynamoDB} from './utils/lambdaConfig'
 
-const dynamodb = new DynamoDB.DocumentClient();
-const MessagesTableName = process.env.MESSAGES_DYNAMODB_TABLE || '';
+const dynamodb = configureDynamoDB();
+const TableName = process.env.DYNAMODB_TABLE || '';
 const logger = bunyan.createLogger({name: "storeMessageLambda"});
 
 export interface StoreMessageEventInput {
@@ -36,11 +37,11 @@ const constructMessageData = (messageInputData: StoreMessageEventInput): Message
 }
 
 export const handler = async (event: StoreMessageEventInput): Promise<any> => {
-    logger.info(`Storing message to: ${MessagesTableName}`);
+    logger.info(`Storing message to: ${TableName}`);
     const messageData = constructMessageData(event);
 
     const dbParams: DynamoDB.DocumentClient.PutItemInput = {
-        TableName: MessagesTableName,
+        TableName,
         Item: messageData
     };
 

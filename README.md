@@ -37,10 +37,18 @@ make deploy
 
 ## Testing
 
-The GraphQL lambdas can be tested locally against the [Amazon DynamoDB docker image](https://hub.docker.com/r/amazon/dynamodb-local):
+The GraphQL lambdas can be tested locally using the [Amazon DynamoDB docker image](https://hub.docker.com/r/amazon/dynamodb-local).
+
+To execute unit tests, run:
 ```
-docker run -p 8000:8000 amazon/dynamodb-local
+make test
 ```
+
+This will:
+- Set the table name env var available to Jest  
+- Launch the dynamodb docker image in a separate process with `port 8000` mapped  
+- Execute unit tests. Before tests execute a dynamodb table is created in the docker image  
+- Stops and removes the dynamodb image after test execution  
 
 ## Example Queries
 
