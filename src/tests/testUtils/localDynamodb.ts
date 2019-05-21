@@ -57,6 +57,7 @@ export const initDb = (async () => {
       TableName: tableName,
     }).promise();
 
+    return ddbClient;
 });
 
 export const teardownDb = (async () => {

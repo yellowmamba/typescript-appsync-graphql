@@ -41,6 +41,7 @@ The GraphQL lambdas can be tested locally using the [Amazon DynamoDB docker imag
 
 To execute unit tests, run:
 ```
+export DYNAMODB_TABLE=TestTable
 make test
 ```
 
