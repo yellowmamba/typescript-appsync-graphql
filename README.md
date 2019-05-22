@@ -32,11 +32,11 @@ export STACK_NAME=
 ```
 
 ```
-# Package and Build
+# Build and test during development
 make
 
-# Deploy
-make deploy
+# Build, Package and Deploy
+make deploy-stack
 ```
 
 #### Packaging notes:
