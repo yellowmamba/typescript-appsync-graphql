@@ -77,7 +77,91 @@ Resources:
                   - !GetAtt StoreMessageLambdaFunction.Arn
                   - !GetAtt GetDeviceLambdaFunction.Arn
 
-  # AppSync API Resolvers:
+  # AppSync Lambdas
+
+  GetMessageLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./handler.zip
+      Handler: getMessage.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDBTable
+
+  AllMessagesLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./handler.zip
+      Handler: allMessages.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDBTable
+
+  StoreMessageLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./handler.zip
+      Handler: storeMessage.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDBTable
+
+  GetDeviceLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./handler.zip
+      Handler: getDevice.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDBTable
+
+  # AppSync Data Sources
+
+  GetMessageLambdaDataSource:
+    Type: "AWS::AppSync::DataSource"
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Name: !Sub ${APIName}_GetMessageLambdaDataSource
+      Description: "The AppSync Lambda Data Source for getting a message"
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !GetAtt GetMessageLambdaFunction.Arn
+
+  AllMessagesLambdaDataSource:
+    Type: "AWS::AppSync::DataSource"
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Name: !Sub ${APIName}_AllMessagesLambdaDataSource
+      Description: "The AppSync Lambda Data Source for getting all messages"
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !GetAtt AllMessagesLambdaFunction.Arn
+
+  StoreMessageLambdaDataSource:
+    Type: "AWS::AppSync::DataSource"
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Name: !Sub ${APIName}_StoreMessageLambdaDataSource
+      Description: "The AppSync Lambda Data Source for storing a message"
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !GetAtt StoreMessageLambdaFunction.Arn
+
+  GetDeviceLambdaDataSource:
+    Type: "AWS::AppSync::DataSource"
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Name: !Sub ${APIName}_GetDeviceLambdaDataSource
+      Description: "The AppSync Lambda Data Source for getting a device"
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !GetAtt GetDeviceLambdaFunction.Arn
+
+  # AppSync Resolvers
 
   GetMessageQueryResolver:
     Type: "AWS::AppSync::Resolver"
@@ -92,28 +176,10 @@ Resources:
           "version": "2017-02-28",
           "operation": "Invoke",
           "payload": {
-            "arguments": $utils.toJson($context.arguments)
+            "arguments": $utils.toJson($ctx.args)
           }
         }
       ResponseMappingTemplate: "$util.toJson($context.result)"
-  GetMessageLambdaFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: ./handler.zip
-      Handler: getMessage.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DynamoDBTable
-  GetMessageLambdaDataSource:
-    Type: "AWS::AppSync::DataSource"
-    Properties:
-      ApiId: !GetAtt AppSyncApi.ApiId
-      Name: !Sub ${APIName}_GetMessageLambdaDataSource
-      Description: "The AppSync Lambda Data Source for getting a message"
-      Type: AWS_LAMBDA
-      ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
-      LambdaConfig:
-        LambdaFunctionArn: !GetAtt GetMessageLambdaFunction.Arn
 
   AllMessagesQueryResolver:
     Type: "AWS::AppSync::Resolver"
@@ -128,28 +194,10 @@ Resources:
           "version": "2017-02-28",
           "operation": "Invoke",
           "payload": {
-            "arguments": $utils.toJson($context.arguments)
+            "arguments": $utils.toJson($ctx.args)
           }
         }
       ResponseMappingTemplate: "$utils.toJson($context.result)"
-  AllMessagesLambdaFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: ./handler.zip
-      Handler: allMessages.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DynamoDBTable
-  AllMessagesLambdaDataSource:
-    Type: "AWS::AppSync::DataSource"
-    Properties:
-      ApiId: !GetAtt AppSyncApi.ApiId
-      Name: !Sub ${APIName}_AllMessagesLambdaDataSource
-      Description: "The AppSync Lambda Data Source for getting all messages"
-      Type: AWS_LAMBDA
-      ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
-      LambdaConfig:
-        LambdaFunctionArn: !GetAtt AllMessagesLambdaFunction.Arn
 
   StoreMessageMutationResolver:
     Type: "AWS::AppSync::Resolver"
@@ -164,30 +212,11 @@ Resources:
           "version": "2017-02-28",
           "operation": "Invoke",
           "payload": {
-            "arguments": $utils.toJson($context.arguments)
+            "arguments": $utils.toJson($ctx.args)
           }
         }
       ResponseMappingTemplate: "$utils.toJson($context.result)"
-  StoreMessageLambdaFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: ./handler.zip
-      Handler: storeMessage.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DynamoDBTable
-  StoreMessageLambdaDataSource:
-    Type: "AWS::AppSync::DataSource"
-    Properties:
-      ApiId: !GetAtt AppSyncApi.ApiId
-      Name: !Sub ${APIName}_StoreMessageLambdaDataSource
-      Description: "The AppSync Lambda Data Source for storing a message"
-      Type: AWS_LAMBDA
-      ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
-      LambdaConfig:
-        LambdaFunctionArn: !GetAtt StoreMessageLambdaFunction.Arn
 
-  # TODO: fix nested relation for fetching the messages field
   GetDeviceQueryResolver:
     Type: "AWS::AppSync::Resolver"
     DependsOn: AppSyncSchema
@@ -201,28 +230,28 @@ Resources:
           "version": "2017-02-28",
           "operation": "Invoke",
           "payload": {
-            "arguments": $utils.toJson($context.arguments)
+            "arguments": $utils.toJson($ctx.args)
           }
         }
       ResponseMappingTemplate: "$util.toJson($context.result)"
-  GetDeviceLambdaFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: ./handler.zip
-      Handler: getDevice.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DynamoDBTable
-  GetDeviceLambdaDataSource:
-    Type: "AWS::AppSync::DataSource"
+
+  GetDeviceMessagesResolver:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: AppSyncSchema
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
-      Name: !Sub ${APIName}_GetDeviceLambdaDataSource
-      Description: "The AppSync Lambda Data Source for getting a device"
-      Type: AWS_LAMBDA
-      ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
-      LambdaConfig:
-        LambdaFunctionArn: !GetAtt GetDeviceLambdaFunction.Arn
+      TypeName: Device
+      FieldName: messages
+      DataSourceName: !GetAtt AllMessagesLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "Invoke",
+          "payload": {
+            "arguments": $utils.toJson($ctx.source)
+          }
+        }
+      ResponseMappingTemplate: "$util.toJson($context.result)"
 
 Outputs:
 
