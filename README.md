@@ -65,7 +65,7 @@ This will:
 mutation {
       storeMessage(
         deviceId: "D123", 
-        message: "An anomaly was detected,
+        message: "An anomaly was detected",
         messageType: "Alert"
       ) {
     deviceId,
