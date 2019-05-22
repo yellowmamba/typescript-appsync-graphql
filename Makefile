@@ -1,4 +1,4 @@
-default: install build validate
+default: install build validate test
 
 validate:
 	sam validate
@@ -25,7 +25,7 @@ package:
 	echo "package src and modules into zipped handler..."
 	rm -rf node_modules
 	npm install --production
-	cp -R node_modules dist && cd dist && zip -r -q ../handler.zip .
+	cp -R node_modules dist && cd dist && rm -rf tests && zip -r -q ../handler.zip .
 
 	echo "package cloudformation template..."
 	aws cloudformation package \

@@ -13,7 +13,6 @@ Parameters:
 
 Globals:
   Function:
-    CodeUri: ./handler.zip
     Runtime: nodejs10.x
     Timeout: 10
     Environment:
@@ -100,6 +99,7 @@ Resources:
   GetMessageLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: ./handler.zip
       Handler: getMessage.handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -135,6 +135,7 @@ Resources:
   AllMessagesLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: ./handler.zip
       Handler: allMessages.handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -170,6 +171,7 @@ Resources:
   StoreMessageLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: ./handler.zip
       Handler: storeMessage.handler
       Policies:
         - DynamoDBCrudPolicy:

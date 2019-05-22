@@ -75,7 +75,7 @@ Returns:
   }
 }
 
-query{
+query {
   getMessage(deviceId: "F123", timestamp: 1558052249959) {
    message,
    messageType
@@ -83,7 +83,28 @@ query{
 }
 
 # See all messages for the device
-query{
+query {
+  allMessages(deviceId: "F123") {
+   message
+  }
+}
+
+Returns:
+{
+  "data": {
+    "allMessages": [
+      {
+        "message": "A new test message"
+      },
+      {
+        "message": "A second test message"
+      }
+    ]
+  }
+}
+
+# See all messages for the device
+query {
   getDevice(deviceId: "F123") {
     deviceName,
     messages {
