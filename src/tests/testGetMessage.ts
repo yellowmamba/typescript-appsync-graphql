@@ -19,7 +19,7 @@ interface Message {
 
 describe("handler", () => {
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         jest.setTimeout(60000);
         const ddbClient = await initDb();
         const TableName = process.env.DYNAMODB_TABLE || '';
@@ -43,6 +43,10 @@ describe("handler", () => {
             }
         };
         return await ddbClient.putItem(dbParams).promise();
+    });
+
+    afterEach(async () => {
+        teardownDb();
     });
 
     test('handlerValidEvent', async () => {
@@ -94,9 +98,5 @@ describe("handler", () => {
         return handler(mockEvent).then(result => {
             expect(result).toEqual(expectedMessage);
         })
-    });
-
-    afterAll(async () => {
-        teardownDb();
     });
 });

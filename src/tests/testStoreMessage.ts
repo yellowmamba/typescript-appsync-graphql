@@ -11,9 +11,13 @@ import {
 
 describe("handler", () => {
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         jest.setTimeout(60000);
         return initDb();
+    });
+
+    afterEach(async () => {
+        teardownDb();
     });
 
     test('handler', async () => {
@@ -33,9 +37,5 @@ describe("handler", () => {
             expect(result.messageType).toEqual("Test Message Type");
             expect(result.timestamp).toBeGreaterThanOrEqual(startTime);
         })
-    });
-
-    afterAll(async () => {
-        teardownDb();
     });
 });
