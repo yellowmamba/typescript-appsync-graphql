@@ -17,6 +17,23 @@ be expanded upon to provide realtime message updates for Devices using Appsync/G
 * [Docker installed](https://www.docker.com/community-edition)
 * Typescript installed
 
+## Testing
+
+The GraphQL lambdas can be tested locally using the [Amazon DynamoDB docker image](https://hub.docker.com/r/amazon/dynamodb-local).
+
+To execute unit tests, run:
+```
+export DEVICES_DYNAMODB_TABLE=TestDevicesTable
+export MESSAGES_DYNAMODB_TABLE=TestMessagesTable
+make test
+```
+
+This will:
+- Set the table name env var available to Jest  
+- Launch the dynamodb docker image in a separate process with `port 8000` mapped  
+- Execute unit tests. Before tests execute a dynamodb table is created in the docker image  
+- Stops and removes the dynamodb image after test execution  
+
 ## Packaging and deployment
 
 An S3 bucket must be created before deployment to hold the lambda code:
@@ -42,23 +59,6 @@ make deploy-stack
 #### Packaging notes:
 - The `devDependencies` are installed in order for `tsc` to compile the TypeScript code to Javascript
 - The dev `node_modules` are then removed and the production dependencies are installed and zipped in the lambda package
-
-## Testing
-
-The GraphQL lambdas can be tested locally using the [Amazon DynamoDB docker image](https://hub.docker.com/r/amazon/dynamodb-local).
-
-To execute unit tests, run:
-```
-export DEVICES_DYNAMODB_TABLE=TestDevicesTable
-export MESSAGES_DYNAMODB_TABLE=TestMessagesTable
-make test
-```
-
-This will:
-- Set the table name env var available to Jest  
-- Launch the dynamodb docker image in a separate process with `port 8000` mapped  
-- Execute unit tests. Before tests execute a dynamodb table is created in the docker image  
-- Stops and removes the dynamodb image after test execution  
 
 ## Example Queries
 
@@ -121,5 +121,30 @@ query {
       message
     }
   }
+}
+```
+
+## AppSync notes
+
+- When a nested resolver is called, like the `messages` field on `Device`, the `ctx.source` object contains a JSON 
+object of the resolved fields from the parent object. If a nested resolver is called but no other fields on the parent 
+type are queried, the parent type still must be resolved:
+```
+query {
+    getDevice(deviceId: "D123") {
+        messages {
+            message
+        }
+    }
+}
+```
+
+- If a field with a nested resolver is not queried, the nested resolver will *NOT* be called, for example the following 
+query does not require the resolver on the `messages` field to be called:
+```
+query {
+    getDevice(deviceId: "D123") {
+        deviceName
+    }
 }
 ```
