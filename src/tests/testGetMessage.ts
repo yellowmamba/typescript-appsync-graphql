@@ -73,7 +73,7 @@ describe("handler", () => {
 
     test('handlerNoDeviceAtTimestamp', async () => {
 
-        const expectedMessage = {}
+        const expectedMessage = undefined;
         const mockEvent: GetMessageEventInput = {
             "arguments": {
                 "deviceId": "TestDevice",
@@ -88,7 +88,7 @@ describe("handler", () => {
 
     test('handlerNoDevice', async () => {
 
-        const expectedMessage = {}
+        const expectedMessage = undefined;
         const mockEvent: GetMessageEventInput = {
             "arguments": {
                 "deviceId": "DoesNotExist",

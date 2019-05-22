@@ -29,15 +29,8 @@ export const handler = async (event: GetMessageEventInput): Promise<any> => {
 
     try {
         const data = await dynamodb.get(dbParams).promise();
-
-        if (data.Item !== undefined) {
-            logger.info('Successfully got message:', data.Item);
-            return data.Item;
-        }
-        else {
-            return {};
-        }
-
+        logger.info('Successfully got message:', data.Item);
+        return data.Item;
       } catch (err) {
         logger.error('ERROR:', err);
         return err;
