@@ -4,7 +4,7 @@ import {
 } from '../getMessage'
 
 import {
-    initDb,
+    initMessagesDb,
     teardownDb
 } from './testUtils/localDynamodb'
 import {DynamoDB} from "aws-sdk";
@@ -19,10 +19,11 @@ interface Message {
 
 describe("handler", () => {
 
+    const TableName = process.env.MESSAGES_DYNAMODB_TABLE || '';
+
     beforeEach(async () => {
-        jest.setTimeout(60000);
-        const ddbClient = await initDb();
-        const TableName = process.env.DYNAMODB_TABLE || '';
+        jest.setTimeout(20000);
+        const ddbClient = await initMessagesDb(TableName);
 
         const dbParams: DynamoDB.PutItemInput = {
             TableName,
@@ -46,7 +47,7 @@ describe("handler", () => {
     });
 
     afterEach(async () => {
-        teardownDb();
+        teardownDb(TableName);
     });
 
     test('handlerValidEvent', async () => {

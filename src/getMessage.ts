@@ -5,7 +5,7 @@ import bunyan from 'bunyan';
 import {configureDynamoDB} from './utils/lambdaConfig'
 
 const dynamodb = configureDynamoDB();
-const TableName = process.env.DYNAMODB_TABLE || '';
+const TableName = process.env.MESSAGES_DYNAMODB_TABLE || '';
 const logger = bunyan.createLogger({name: "getMessageLambda"});
 
 export interface GetMessageEventInput {

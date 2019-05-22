@@ -7,7 +7,8 @@ install:
 	npm install
 
 test:
-	export DYNAMODB_TABLE=TestTable
+	export DEVICES_DYNAMODB_TABLE=TestDevicesTable
+	export MESSAGES_DYNAMODB_TABLE=TestMessagesTable
 	docker-compose up -d
 	npm test
 	docker-compose down

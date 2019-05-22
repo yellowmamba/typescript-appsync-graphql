@@ -11,11 +11,10 @@ export const getDynamoDBClient = () => {
 }
 
 
-export const initDb = (async () => {
-    logger.info("Initializing local dynamodb table for testing");
+export const initMessagesDb = (async (tableName: string) => {
+    logger.info(`Initializing local dynamodb table: ${tableName}`);
 
     const ddbClient = getDynamoDBClient();
-    const tableName = process.env.DYNAMODB_TABLE || "";
 
     try {
       await ddbClient.deleteTable({TableName: tableName}).promise()
@@ -60,11 +59,10 @@ export const initDb = (async () => {
     return ddbClient;
 });
 
-export const teardownDb = (async () => {
-    logger.info("Tearing down local dynamodb table");
+export const teardownDb = (async (tableName: string) => {
+    logger.info(`Tearing down local dynamodb table: ${tableName}`);
 
     const ddbClient = getDynamoDBClient();
-    const tableName = process.env.DYNAMODB_TABLE || "";
 
     const deleteParams: AWS.DynamoDB.Types.DeleteTableInput = {
         TableName: tableName

@@ -4,20 +4,22 @@ import {
 } from '../storeMessage'
 
 import {
-    initDb,
+    initMessagesDb,
     teardownDb
 } from './testUtils/localDynamodb'
 
 
 describe("handler", () => {
 
+    const TableName = process.env.MESSAGES_DYNAMODB_TABLE || '';
+
     beforeEach(async () => {
-        jest.setTimeout(60000);
-        return initDb();
+        jest.setTimeout(10000);
+        return initMessagesDb(TableName);
     });
 
     afterEach(async () => {
-        teardownDb();
+        teardownDb(TableName);
     });
 
     test('handler', async () => {
