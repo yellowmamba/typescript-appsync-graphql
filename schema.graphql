@@ -23,5 +23,6 @@ type Message {
 type Device {
     deviceId: String!,
     deviceName: String,
+    createdTimestamp: AWSTimestamp!,
     messages: [Message]
 }

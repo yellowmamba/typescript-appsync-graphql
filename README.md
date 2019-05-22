@@ -1,6 +1,14 @@
 # AWS AppSync GraphQL API
 
-This repo creates a lambda function using AWS SAM, NodeJS and Typescript.
+This repo contains an example implementation of a GraphQL API for an IoT Device Messaging System. It is 
+built with [AWS Appsync](https://aws.amazon.com/appsync/) and using Typescript lambda functions as resolvers and DynamoDB as a data source. 
+
+The models exposed via the API are Devices and Messages:
+
+![MessageSystem Models](docs/models.jpeg)
+
+An example use case for the API would be an admin console for managing IoT Devices and viewing messages. The API could
+be expanded upon to provide realtime message updates for Devices using Appsync/GraphQL subscriptions.
 
 ## Requirements
 
@@ -56,9 +64,9 @@ This will:
 ```
 mutation {
       storeMessage(
-        deviceId: "F123", 
-        message: "A new test message",
-        messageType: "chat"
+        deviceId: "D123", 
+        message: "An anomaly was detected,
+        messageType: "Alert"
       ) {
     deviceId,
     timestamp
@@ -69,7 +77,7 @@ Returns:
 {
   "data": {
     "storeMessage": {
-      "deviceId": "F123",
+      "deviceId": "D123",
       "timestamp": 1558052249959,
     }
   }
@@ -84,7 +92,7 @@ query {
 
 # See all messages for the device
 query {
-  allMessages(deviceId: "F123") {
+  allMessages(deviceId: "D123") {
    message
   }
 }
@@ -94,10 +102,10 @@ Returns:
   "data": {
     "allMessages": [
       {
-        "message": "A new test message"
+        "message": "An anomaly was detected"
       },
       {
-        "message": "A second test message"
+        "message": "Everything is fine"
       }
     ]
   }
@@ -105,7 +113,7 @@ Returns:
 
 # See all messages for the device
 query {
-  getDevice(deviceId: "F123") {
+  getDevice(deviceId: "D123") {
     deviceName,
     messages {
       timestamp,
