@@ -145,6 +145,12 @@ query {
         }
     }
 }
+
+GetDeviceQueryResolver (Pipeline resolver)
+    - GetUserLambdaFunction called
+    - GetDeviceLambdaFunction called (receives user from ctx.stash)
+GetDeviceQueryResolver (Unit resolver)
+    - AllMessagesLambdaFunction called (receives resolved Device properties from ctx.source)
 ```
 
 - If a field with a nested resolver is not queried, the nested resolver will *NOT* be called, for example the following 
@@ -155,11 +161,24 @@ query {
         deviceName
     }
 }
+
+GetDeviceQueryResolver (Pipeline resolver)
+    - GetUserLambdaFunction called
+    - GetDeviceLambdaFunction called (receives user from ctx.stash)
 ```
 
-- If you Reject a promise in a nested resolver the field will return `null` and the AppSync resulting errors object
-will contain the error reason/message. Throwing the error at the top level of the lambda handler will give the same result.
+- If you Reject a promise or throw an uncaught exception in a nested resolver the field will return `null` and the 
+AppSync resulting errors object will contain the error reason/message.
 ```
+query {
+    getDevice(deviceId: "D123") {
+        deviceName,
+        messages {
+            message
+        }
+    }
+}
+
 {
   "data": {
     "getDevice": {
