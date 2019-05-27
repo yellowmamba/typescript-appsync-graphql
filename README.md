@@ -56,6 +56,14 @@ make
 make deploy-stack
 ```
 
+Individual lambda functions can be tested using the SAM CLI:
+```
+# Updates the handler.zip lambda package that SAM references
+make local-package
+
+sam local invoke <LAMBDA_FUNCTION_NAME>
+```
+
 #### Packaging notes:
 - The `devDependencies` are installed in order for `tsc` to compile the TypeScript code to Javascript
 - The dev `node_modules` are then removed and the production dependencies are installed and zipped in the lambda package
@@ -146,5 +154,19 @@ query {
     getDevice(deviceId: "D123") {
         deviceName
     }
+}
+```
+
+- If you Reject a promise in a nested resolver the field will return `null` and the AppSync resulting errors object
+will contain the error reason/message. Throwing the error at the top level of the lambda handler will give the same result.
+```
+{
+  "data": {
+    "getDevice": {
+      "deviceName": "IoTDevice",
+      "messages": null
+    }
+  },
+  "errors": []
 }
 ```

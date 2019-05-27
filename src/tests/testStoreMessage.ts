@@ -30,7 +30,8 @@ describe("handler", () => {
                 "deviceId": "F1234",
                 "message": "Test Message",
                 "messageType": "Test Message Type"
-            }
+            },
+            "identity": {}
         };
 
         return handler(mockEvent).then(result => {

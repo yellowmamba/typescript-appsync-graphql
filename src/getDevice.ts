@@ -12,7 +12,9 @@ const logger = bunyan.createLogger({name: "getDeviceLambda"});
 export interface GetDeviceEventInput {
     arguments: {
         deviceId: string
-    }
+    },
+    identity: any,
+    user: any
 }
 
 export const handler = async (event: GetDeviceEventInput): Promise<any> => {

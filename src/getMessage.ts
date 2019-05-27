@@ -12,7 +12,8 @@ export interface GetMessageEventInput {
     arguments: {
         deviceId: string,
         timestamp: number
-    }
+    },
+    identity: any
 }
 
 export const handler = async (event: GetMessageEventInput): Promise<any> => {

@@ -13,7 +13,8 @@ export interface StoreMessageEventInput {
         deviceId: string,
         message: string,
         messageType: string
-    }
+    },
+    identity: any
 }
 
 interface Message {

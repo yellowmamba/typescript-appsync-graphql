@@ -49,14 +49,14 @@ Resources:
       BillingMode: PAY_PER_REQUEST
 
   AppSyncApi:
-    Type: "AWS::AppSync::GraphQLApi"
+    Type: AWS::AppSync::GraphQLApi
     Description: "The GraphQL API for the Messages"
     Properties:
       AuthenticationType: "API_KEY"
       Name: !Sub ${APIName}
 
   AppSyncSchema:
-    Type: "AWS::AppSync::GraphQLSchema"
+    Type: AWS::AppSync::GraphQLSchema
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
       DefinitionS3Location: ./schema.graphql
@@ -82,12 +82,25 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
+                  - !GetAtt GetUserLambdaFunction.Arn
                   - !GetAtt GetMessageLambdaFunction.Arn
                   - !GetAtt AllMessagesLambdaFunction.Arn
                   - !GetAtt StoreMessageLambdaFunction.Arn
                   - !GetAtt GetDeviceLambdaFunction.Arn
 
   # AppSync Lambdas
+
+  GetUserLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./handler.zip
+      Handler: getUser.handler
+      Environment:
+        Variables:
+          MESSAGES_DYNAMODB_TABLE: !Ref MessagesDynamoDBTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MessagesDynamoDBTable
 
   GetMessageLambdaFunction:
     Type: AWS::Serverless::Function
@@ -139,8 +152,19 @@ Resources:
 
   # AppSync Data Sources
 
+  GetUserLambdaDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Name: !Sub ${APIName}_GetUserLambdaDataSource
+      Description: "The AppSync Lambda Data Source for getting a user from cognito (pipeline resolver function)"
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !GetAtt GetUserLambdaFunction.Arn
+
   GetMessageLambdaDataSource:
-    Type: "AWS::AppSync::DataSource"
+    Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
       Name: !Sub ${APIName}_GetMessageLambdaDataSource
@@ -151,7 +175,7 @@ Resources:
         LambdaFunctionArn: !GetAtt GetMessageLambdaFunction.Arn
 
   AllMessagesLambdaDataSource:
-    Type: "AWS::AppSync::DataSource"
+    Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
       Name: !Sub ${APIName}_AllMessagesLambdaDataSource
@@ -162,7 +186,7 @@ Resources:
         LambdaFunctionArn: !GetAtt AllMessagesLambdaFunction.Arn
 
   StoreMessageLambdaDataSource:
-    Type: "AWS::AppSync::DataSource"
+    Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
       Name: !Sub ${APIName}_StoreMessageLambdaDataSource
@@ -173,7 +197,7 @@ Resources:
         LambdaFunctionArn: !GetAtt StoreMessageLambdaFunction.Arn
 
   GetDeviceLambdaDataSource:
-    Type: "AWS::AppSync::DataSource"
+    Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
       Name: !Sub ${APIName}_GetDeviceLambdaDataSource
@@ -185,8 +209,32 @@ Resources:
 
   # AppSync Resolvers
 
+  GetUserFunction:
+    Type: AWS::AppSync::FunctionConfiguration
+    Properties:
+      Name: GetUserFunction
+      FunctionVersion: "2018-05-29"
+      ApiId: !GetAtt AppSyncApi.ApiId
+      DataSourceName: !GetAtt GetUserLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "Invoke",
+          "payload": {
+            "identity": $utils.toJson($context.identity),
+          }
+        }
+      ResponseMappingTemplate: |
+        ## Raise a GraphQL field error in case of a datasource invocation error
+        #if($ctx.error)
+          $util.error($context.error.message, $context.error.type)
+        #end
+        $util.qr($ctx.stash.put("user", $ctx.result))
+        ## Pass back the result from Lambda. **
+        $utils.toJson($context.result)
+
   GetMessageQueryResolver:
-    Type: "AWS::AppSync::Resolver"
+    Type: AWS::AppSync::Resolver
     DependsOn: AppSyncSchema
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
@@ -198,13 +246,14 @@ Resources:
           "version": "2017-02-28",
           "operation": "Invoke",
           "payload": {
-            "arguments": $utils.toJson($ctx.args)
+            "arguments": $utils.toJson($ctx.args),
+            "identity": $utils.toJson($context.identity)
           }
         }
-      ResponseMappingTemplate: "$util.toJson($context.result)"
+      ResponseMappingTemplate: $util.toJson($context.result)
 
   AllMessagesQueryResolver:
-    Type: "AWS::AppSync::Resolver"
+    Type: AWS::AppSync::Resolver
     DependsOn: AppSyncSchema
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
@@ -216,13 +265,14 @@ Resources:
           "version": "2017-02-28",
           "operation": "Invoke",
           "payload": {
-            "arguments": $utils.toJson($ctx.args)
+            "arguments": $utils.toJson($ctx.args),
+            "identity": $utils.toJson($context.identity)
           }
         }
-      ResponseMappingTemplate: "$utils.toJson($context.result)"
+      ResponseMappingTemplate: $utils.toJson($context.result)
 
   StoreMessageMutationResolver:
-    Type: "AWS::AppSync::Resolver"
+    Type: AWS::AppSync::Resolver
     DependsOn: AppSyncSchema
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
@@ -234,31 +284,54 @@ Resources:
           "version": "2017-02-28",
           "operation": "Invoke",
           "payload": {
-            "arguments": $utils.toJson($ctx.args)
+            "arguments": $utils.toJson($ctx.args),
+            "identity": $utils.toJson($context.identity)
           }
         }
-      ResponseMappingTemplate: "$utils.toJson($context.result)"
+      ResponseMappingTemplate: $utils.toJson($context.result)
 
   GetDeviceQueryResolver:
-    Type: "AWS::AppSync::Resolver"
+    Type: AWS::AppSync::Resolver
     DependsOn: AppSyncSchema
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
       TypeName: Query
       FieldName: getDevice
+      RequestMappingTemplate: "{}"
+      ResponseMappingTemplate: $util.toJson($context.result)
+      Kind: PIPELINE
+      PipelineConfig:
+        Functions:
+          - !GetAtt GetUserFunction.FunctionId
+          - !GetAtt GetDeviceFunction.FunctionId
+
+  GetDeviceFunction:
+    Type: AWS::AppSync::FunctionConfiguration
+    Properties:
+      Name: GetDeviceFunction
+      FunctionVersion: "2018-05-29"
+      ApiId: !GetAtt AppSyncApi.ApiId
       DataSourceName: !GetAtt GetDeviceLambdaDataSource.Name
       RequestMappingTemplate: |
         {
           "version": "2017-02-28",
           "operation": "Invoke",
           "payload": {
-            "arguments": $utils.toJson($ctx.args)
+            "arguments": $utils.toJson($context.arguments),
+            "identity": $utils.toJson($context.identity),
+            "user": $utils.toJson($context.stash.user),
           }
         }
-      ResponseMappingTemplate: "$util.toJson($context.result)"
+      ResponseMappingTemplate: |
+        ## Raise a GraphQL field error in case of a datasource invocation error
+        #if($ctx.error)
+          $util.error($context.error.message, $context.error.type)
+        #end
+        ## Pass back the result from Lambda. **
+        $utils.toJson($context.result)
 
   GetDeviceMessagesResolver:
-    Type: "AWS::AppSync::Resolver"
+    Type: AWS::AppSync::Resolver
     DependsOn: AppSyncSchema
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
@@ -270,10 +343,11 @@ Resources:
           "version": "2017-02-28",
           "operation": "Invoke",
           "payload": {
-            "arguments": $utils.toJson($ctx.source)
+            "arguments": $utils.toJson($ctx.source),
+            "identity": $utils.toJson($context.identity)
           }
         }
-      ResponseMappingTemplate: "$util.toJson($context.result)"
+      ResponseMappingTemplate: $util.toJson($context.result)
 
 Outputs:
 

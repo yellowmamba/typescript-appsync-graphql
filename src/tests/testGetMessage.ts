@@ -63,7 +63,8 @@ describe("handler", () => {
             "arguments": {
                 "deviceId": "TestDevice",
                 "timestamp": 1000
-            }
+            },
+            "identity": {}
         };
 
         return handler(mockEvent).then(result => {
@@ -78,7 +79,8 @@ describe("handler", () => {
             "arguments": {
                 "deviceId": "TestDevice",
                 "timestamp": 9000
-            }
+            },
+            "identity": {}
         };
 
         return handler(mockEvent).then(result => {
@@ -93,7 +95,8 @@ describe("handler", () => {
             "arguments": {
                 "deviceId": "DoesNotExist",
                 "timestamp": 1000
-            }
+            },
+            "identity": {}
         };
 
         return handler(mockEvent).then(result => {

@@ -22,12 +22,13 @@ clean:
 	rm -f ./packaged.yaml
 	rm -rf ./node_modules
 
-package:
+bundle:
 	echo "package src and modules into zipped handler..."
 	rm -rf node_modules
 	npm install --production
 	cp -R node_modules dist && cd dist && rm -rf tests && zip -r -q ../handler.zip .
 
+package: bundle
 	echo "package cloudformation template..."
 	aws cloudformation package \
 		--template-file template.yaml \
@@ -43,3 +44,5 @@ deploy:
 		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
 
 deploy-stack: clean install build validate package deploy
+
+local-package: clean install validate build bundle

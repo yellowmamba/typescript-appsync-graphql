@@ -11,7 +11,8 @@ const logger = bunyan.createLogger({name: "allMessagesLambda"});
 export interface AllMessagesEventInput {
     arguments: {
         deviceId: string
-    }
+    },
+    identity: any
 }
 
 export const handler = async (event: AllMessagesEventInput): Promise<any> => {
