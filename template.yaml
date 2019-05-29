@@ -54,12 +54,40 @@ Resources:
     Properties:
       AuthenticationType: "API_KEY"
       Name: !Sub ${APIName}
+      LogConfig:
+        CloudWatchLogsRoleArn: !GetAtt AppSyncApiRole.Arn
+        FieldLogLevel: ALL
 
   AppSyncSchema:
     Type: AWS::AppSync::GraphQLSchema
     Properties:
       ApiId: !GetAtt AppSyncApi.ApiId
       DefinitionS3Location: ./schema.graphql
+
+  AppSyncApiRole:
+    Type: AWS::IAM::Role
+    Description: "An IAM Role to allow AWS AppSync logging to Cloudwatch"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AWSAppSyncPushToCloudWatchLogsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - "*"
 
   AppSyncLambdaServiceRole:
     Type: AWS::IAM::Role
@@ -87,6 +115,17 @@ Resources:
                   - !GetAtt AllMessagesLambdaFunction.Arn
                   - !GetAtt StoreMessageLambdaFunction.Arn
                   - !GetAtt GetDeviceLambdaFunction.Arn
+        - PolicyName: AWSAppSyncPushToCloudWatchLogsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - "*"
 
   # AppSync Lambdas
 
