@@ -13,6 +13,9 @@ test:
 	npm test
 	docker-compose down
 
+integration-test:
+	jest src/integrationTests
+
 build:
 	npm run build
 
