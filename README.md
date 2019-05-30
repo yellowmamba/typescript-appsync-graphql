@@ -68,6 +68,26 @@ sam local invoke <LAMBDA_FUNCTION_NAME>
 - The `devDependencies` are installed in order for `tsc` to compile the TypeScript code to Javascript
 - The dev `node_modules` are then removed and the production dependencies are installed and zipped in the lambda package
 
+## Integration Tests
+
+Integration tests can be executed against the live Appsync API. The tests use `graphql-request` and `jest` to 
+execute server-side GraphQL queries against Appsync. These could be used to test an Appsync API after deployment as the
+final stage of a pipeline.
+
+The tests are dependent on the APPSYNC URL and API KEY being available as Environment variables.
+
+Also note, the tests currently require data to be populated in DynamoDB before running. 
+They could be extended to add mutations that are then validated by queries to ensure that they 
+do not rely on previous DynamoDB state.
+
+```
+export APPSYNC_ENDPOINT_URL=
+export APPSYNC_API_KEY=
+
+make integration-test
+```
+
+
 ## Example Queries
 
 ```
