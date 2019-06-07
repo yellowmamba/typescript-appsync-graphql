@@ -22,7 +22,7 @@ be expanded upon to provide realtime message updates for Devices using Appsync/G
 The GraphQL lambdas can be tested locally using the [Amazon DynamoDB docker image](https://hub.docker.com/r/amazon/dynamodb-local).
 
 To execute unit tests, run:
-```
+```bash
 export DEVICES_DYNAMODB_TABLE=TestDevicesTable
 export MESSAGES_DYNAMODB_TABLE=TestMessagesTable
 make test
@@ -43,12 +43,12 @@ aws s3 mb s3://BUCKET_NAME
 ```
 
 Set the follow environment variables:
-```
+```bash
 export S3_BUCKET=
 export STACK_NAME=
 ```
 
-```
+```bash
 # Build and test during development
 make
 
@@ -70,7 +70,7 @@ sam local invoke <LAMBDA_FUNCTION_NAME>
 
 ## Example Queries
 
-```
+```graphql
 mutation {
       storeMessage(
         deviceId: "D123", 
@@ -137,7 +137,7 @@ query {
 - When a nested resolver is called, like the `messages` field on `Device`, the `ctx.source` object contains a JSON 
 object of the resolved fields from the parent object. If a nested resolver is called but no other fields on the parent 
 type are queried, the parent type still must be resolved:
-```
+```graphql
 query {
     getDevice(deviceId: "D123") {
         messages {
@@ -155,7 +155,7 @@ GetDeviceQueryResolver (Unit resolver)
 
 - If a field with a nested resolver is not queried, the nested resolver will *NOT* be called, for example the following 
 query does not require the resolver on the `messages` field to be called:
-```
+```graphql
 query {
     getDevice(deviceId: "D123") {
         deviceName
@@ -169,7 +169,7 @@ GetDeviceQueryResolver (Pipeline resolver)
 
 - If you Reject a promise or throw an uncaught exception in a nested resolver the field will return `null` and the 
 AppSync resulting errors object will contain the error reason/message.
-```
+```graphql
 query {
     getDevice(deviceId: "D123") {
         deviceName,
