@@ -38,7 +38,7 @@ This will:
 
 An S3 bucket must be created before deployment to hold the lambda code:
 
-```
+```bash
 aws s3 mb s3://BUCKET_NAME
 ```
 
@@ -57,7 +57,7 @@ make deploy-stack
 ```
 
 Individual lambda functions can be tested using the SAM CLI:
-```
+```bash
 # Updates the handler.zip lambda package that SAM references
 make local-package
 
@@ -80,7 +80,7 @@ Also note, the tests currently require data to be populated in DynamoDB before r
 They could be extended to add mutations that are then validated by queries to ensure that they 
 do not rely on previous DynamoDB state.
 
-```
+```bash
 export APPSYNC_ENDPOINT_URL=
 export APPSYNC_API_KEY=
 
