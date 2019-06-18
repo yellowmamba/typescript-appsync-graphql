@@ -19,7 +19,6 @@ Globals:
 Resources:
 
   MessagesDynamoDBTable:
-    Description: "NoSQL DB for Device Messages"
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${APIName}-messages-ddb-table
@@ -36,7 +35,6 @@ Resources:
       BillingMode: PAY_PER_REQUEST
 
   DevicesDynamoDBTable:
-    Description: "NoSQL DB for Devices"
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${APIName}-devices-ddb-table
@@ -50,7 +48,6 @@ Resources:
 
   AppSyncApi:
     Type: AWS::AppSync::GraphQLApi
-    Description: "The GraphQL API for the Messages"
     Properties:
       AuthenticationType: "API_KEY"
       Name: !Sub ${APIName}
@@ -66,7 +63,6 @@ Resources:
 
   AppSyncLambdaServiceRole:
     Type: AWS::IAM::Role
-    Description: "An IAM Role to allow AWS AppSync to invoke lambda functions"
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -90,6 +86,7 @@ Resources:
                   - !GetAtt AllMessagesLambdaFunction.Arn
                   - !GetAtt StoreMessageLambdaFunction.Arn
                   - !GetAtt GetDeviceLambdaFunction.Arn
+                  - !GetAtt AllDevicesLambdaFunction.Arn
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs
 
@@ -155,6 +152,18 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref DevicesDynamoDBTable
 
+  AllDevicesLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./handler.zip
+      Handler: allDevices.handler
+      Environment:
+        Variables:
+          DEVICES_DYNAMODB_TABLE: !Ref DevicesDynamoDBTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DevicesDynamoDBTable
+
   # AppSync Data Sources
 
   GetUserLambdaDataSource:
@@ -211,6 +220,17 @@ Resources:
       ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
       LambdaConfig:
         LambdaFunctionArn: !GetAtt GetDeviceLambdaFunction.Arn
+
+  AllDevicesLambdaDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      Name: !Sub ${APIName}_AllDevicesLambdaDataSource
+      Description: "The AppSync Lambda Data Source for getting paginated list of all devices"
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt AppSyncLambdaServiceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !GetAtt AllDevicesLambdaFunction.Arn
 
   # AppSync Resolvers
 
@@ -356,6 +376,48 @@ Resources:
           }
         }
       ResponseMappingTemplate: $util.toJson($context.result)
+
+  AllDevicesQueryResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: AppSyncSchema
+    Properties:
+      ApiId: !GetAtt AppSyncApi.ApiId
+      TypeName: Query
+      FieldName: allDevices
+      RequestMappingTemplate: "{}"
+      ResponseMappingTemplate: |
+        $util.qr($context.result.put("user", $context.stash.user))
+        $util.toJson($context.result)
+      Kind: PIPELINE
+      PipelineConfig:
+        Functions:
+          - !GetAtt GetUserFunction.FunctionId
+          - !GetAtt AllDevicesFunction.FunctionId
+
+  AllDevicesFunction:
+    Type: AWS::AppSync::FunctionConfiguration
+    Properties:
+      Name: AllDevicesFunction
+      FunctionVersion: "2018-05-29"
+      ApiId: !GetAtt AppSyncApi.ApiId
+      DataSourceName: !GetAtt AllDevicesLambdaDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "Invoke",
+          "payload": {
+            "arguments": $utils.toJson($context.arguments),
+            "identity": $utils.toJson($context.identity),
+            "user": $utils.toJson($context.stash.user),
+          }
+        }
+      ResponseMappingTemplate: |
+        ## Raise a GraphQL field error in case of a datasource invocation error
+        #if($ctx.error)
+          $util.error($context.error.message, $context.error.type)
+        #end
+        ## Pass back the result from Lambda. **
+        $utils.toJson($context.result)
 
 Outputs:
 

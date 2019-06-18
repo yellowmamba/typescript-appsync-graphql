@@ -2,6 +2,7 @@ default: install build validate test
 
 validate:
 	sam validate
+	cfn-lint -t template.yaml
 
 install:
 	npm install

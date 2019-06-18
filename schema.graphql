@@ -6,7 +6,7 @@ type Schema {
 type Query {
     getMessage(deviceId: String, timestamp: AWSTimestamp!): Message,
     allMessages(deviceId: String!): [Message],
-    getDevice(deviceId: String!): Device
+    getDevice(deviceId: String!): Device,
     allDevices(nextToken: String): DevicePage
 }
 
