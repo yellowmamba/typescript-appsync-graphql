@@ -4,9 +4,10 @@ type Schema {
 }
 
 type Query {
-    getMessage(deviceId: String!, timestamp: AWSTimestamp!): Message,
+    getMessage(deviceId: String, timestamp: AWSTimestamp!): Message,
     allMessages(deviceId: String!): [Message],
     getDevice(deviceId: String!): Device
+    allDevices(nextToken: String): DevicePage
 }
 
 type Mutation {
@@ -25,4 +26,10 @@ type Device {
     deviceName: String,
     createdTimestamp: AWSTimestamp!,
     messages: [Message]
+}
+
+# Returns a paginated list of devices.
+type DevicePage {
+  items: [Device]!,
+  nextToken: String
 }

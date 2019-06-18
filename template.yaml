@@ -303,7 +303,9 @@ Resources:
       TypeName: Query
       FieldName: getDevice
       RequestMappingTemplate: "{}"
-      ResponseMappingTemplate: $util.toJson($context.result)
+      ResponseMappingTemplate: |
+        $util.qr($context.result.put("user", $context.stash.user))
+        $util.toJson($context.result)
       Kind: PIPELINE
       PipelineConfig:
         Functions:
@@ -349,7 +351,8 @@ Resources:
           "operation": "Invoke",
           "payload": {
             "arguments": $utils.toJson($ctx.source),
-            "identity": $utils.toJson($context.identity)
+            "identity": $utils.toJson($context.identity),
+            "user": $utils.toJson($ctx.source.user)
           }
         }
       ResponseMappingTemplate: $util.toJson($context.result)
