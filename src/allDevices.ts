@@ -12,7 +12,8 @@ export interface AllDevicesEventInput {
     arguments: {
         nextToken?: string
     },
-    identity: any
+    identity: any,
+    user: any
 }
 
 export const handler = async (event:AllDevicesEventInput): Promise<any> => {
@@ -24,9 +25,13 @@ export const handler = async (event:AllDevicesEventInput): Promise<any> => {
 
     try {
         const data = await dynamodb.scan(dbParams).promise();
+        // return scan with mocked token value
         const paginatedResults = {
             items: data.Items,
-            nextToken: null,
+            nextToken: "TOKEN1234",
+        }
+        if (paginatedResults.items) {
+            paginatedResults.items.forEach( (i: any) => { i.user = event.user; });
         }
         logger.info('Successfully got device results', paginatedResults);
         return paginatedResults;

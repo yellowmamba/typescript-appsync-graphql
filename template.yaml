@@ -372,7 +372,8 @@ Resources:
           "payload": {
             "arguments": $utils.toJson($ctx.source),
             "identity": $utils.toJson($context.identity),
-            "user": $utils.toJson($ctx.source.user)
+            "user": $utils.toJson($ctx.source.user),
+            "request": $utils.toJson($ctx.request),
           }
         }
       ResponseMappingTemplate: $util.toJson($context.result)
@@ -409,6 +410,7 @@ Resources:
             "arguments": $utils.toJson($context.arguments),
             "identity": $utils.toJson($context.identity),
             "user": $utils.toJson($context.stash.user),
+            "request": $utils.toJson($ctx.request),
           }
         }
       ResponseMappingTemplate: |
