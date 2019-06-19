@@ -64,7 +64,12 @@ describe("handler", () => {
                 "deviceId": "TestDevice",
                 "timestamp": 1000
             },
-            "identity": {}
+            "identity": {},
+            "request": {
+                "headers": {
+                    "x-amzn-trace-id": "Fake123"
+                }
+            }
         };
 
         return handler(mockEvent).then(result => {
@@ -80,7 +85,12 @@ describe("handler", () => {
                 "deviceId": "TestDevice",
                 "timestamp": 9000
             },
-            "identity": {}
+            "identity": {},
+            "request": {
+                "headers": {
+                    "x-amzn-trace-id": "Fake123"
+                }
+            }
         };
 
         return handler(mockEvent).then(result => {
@@ -96,7 +106,12 @@ describe("handler", () => {
                 "deviceId": "DoesNotExist",
                 "timestamp": 1000
             },
-            "identity": {}
+            "identity": {},
+            "request": {
+                "headers": {
+                    "x-amzn-trace-id": "Fake123"
+                }
+            }
         };
 
         return handler(mockEvent).then(result => {

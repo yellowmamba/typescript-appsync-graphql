@@ -1,8 +1,10 @@
 'use strict'
 
 import bunyan from 'bunyan';
+import {updateRequestSession} from './utils/requestSession'
 
 const logger = bunyan.createLogger({name: "getUserLambda"});
+const RequestSessionTableName = process.env.REQUEST_SESSION_DYNAMODB_TABLE || '';
 
 // TODO: update User to use real properties returned from Cognito
 interface User {
@@ -13,23 +15,19 @@ interface User {
 }
 
 interface GetUserEventInput {
-    identity: any
+    identity: any,
+    request: any
 }
 
-// TODO: update function to call Cognito
 /**
- * Returns a mock user. This function simulates a call to AWS Cognito.
- * It would use the identity information from AppSync to authenticate a user and get their details.
- * @param identity
- */
-const getAuthenticatedUser = async (identity: any): Promise<User> => {
-    logger.info({identity}, "Authenticating user")
-
+* Returns a mock user. This function simulates a call to AWS Cognito.
+* It would use the identity information from AppSync to authenticate a user and get their details.
+*/
+const getUserFromCognito = async (identity: any): Promise<User> => {
     // Mock the call to Cognito taking 500ms to complete
     await new Promise((resolve, reject) => {
         setTimeout(() => resolve("done!"), 500)
     })
-
     return {
         id: "mockId123",
         name: "mockUser",
@@ -38,10 +36,18 @@ const getAuthenticatedUser = async (identity: any): Promise<User> => {
     }
 }
 
+
 /*
 AppSync pipeline resolver function that authenticates a user against AWS Cognito
  */
-export const handler = async (event: GetUserEventInput): Promise<User> => {
+export const handler = async (event: GetUserEventInput) => {
     logger.info(event);
-    return await getAuthenticatedUser(event.identity)
+    const requestTraceId: string = event.request.headers['x-amzn-trace-id']
+    const user: User = await getUserFromCognito(event.identity)
+    logger.info({
+        table: RequestSessionTableName,
+        traceId: requestTraceId,
+        user: user
+    });
+    await updateRequestSession(RequestSessionTableName, requestTraceId, user)
 }

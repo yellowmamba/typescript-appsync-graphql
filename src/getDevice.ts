@@ -4,9 +4,11 @@ import {DynamoDB} from 'aws-sdk';
 import bunyan from 'bunyan';
 
 import {configureDynamoDB} from './utils/lambdaConfig'
+import {getUserFromRequestSession} from './utils/requestSession'
 
 const dynamodb = configureDynamoDB();
 const TableName = process.env.DEVICES_DYNAMODB_TABLE || '';
+const RequestSessionTableName = process.env.REQUEST_SESSION_DYNAMODB_TABLE || '';
 const logger = bunyan.createLogger({name: "getDeviceLambda"});
 
 export interface GetDeviceEventInput {
@@ -14,12 +16,14 @@ export interface GetDeviceEventInput {
         deviceId: string
     },
     identity: any,
-    user: any
+    request: any
 }
 
 export const handler = async (event: GetDeviceEventInput): Promise<any> => {
-    logger.info(`Getting device from: ${TableName}`);
     logger.info(event);
+    const requestTraceId: string = event.request.headers['x-amzn-trace-id']
+    const user = await getUserFromRequestSession(RequestSessionTableName, requestTraceId)
+    logger.info({user: user})
 
     const dbParams: DynamoDB.DocumentClient.GetItemInput = {
         TableName,

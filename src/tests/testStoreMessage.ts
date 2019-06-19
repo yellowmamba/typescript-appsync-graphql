@@ -31,7 +31,12 @@ describe("handler", () => {
                 "message": "Test Message",
                 "messageType": "Test Message Type"
             },
-            "identity": {}
+            "identity": {},
+            "request": {
+                "headers": {
+                    "x-amzn-trace-id": "Fake123"
+                }
+            }
         };
 
         return handler(mockEvent).then(result => {

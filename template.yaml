@@ -46,6 +46,23 @@ Resources:
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
+  RequestSessionDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${APIName}-request-session-ddb-table
+      SSESpecification:
+        SSEEnabled: true
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expiry
+        Enabled: true
+      BillingMode: PAY_PER_REQUEST
+
   AppSyncApi:
     Type: AWS::AppSync::GraphQLApi
     Properties:
@@ -100,9 +117,12 @@ Resources:
       Environment:
         Variables:
           MESSAGES_DYNAMODB_TABLE: !Ref MessagesDynamoDBTable
+          REQUEST_SESSION_DYNAMODB_TABLE: !Ref RequestSessionDynamoDBTable
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref MessagesDynamoDBTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RequestSessionDynamoDBTable
 
   GetMessageLambdaFunction:
     Type: AWS::Serverless::Function
@@ -112,9 +132,12 @@ Resources:
       Environment:
         Variables:
           MESSAGES_DYNAMODB_TABLE: !Ref MessagesDynamoDBTable
+          REQUEST_SESSION_DYNAMODB_TABLE: !Ref RequestSessionDynamoDBTable
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref MessagesDynamoDBTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RequestSessionDynamoDBTable
 
   AllMessagesLambdaFunction:
     Type: AWS::Serverless::Function
@@ -124,9 +147,12 @@ Resources:
       Environment:
         Variables:
           MESSAGES_DYNAMODB_TABLE: !Ref MessagesDynamoDBTable
+          REQUEST_SESSION_DYNAMODB_TABLE: !Ref RequestSessionDynamoDBTable
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref MessagesDynamoDBTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RequestSessionDynamoDBTable
 
   StoreMessageLambdaFunction:
     Type: AWS::Serverless::Function
@@ -136,9 +162,12 @@ Resources:
       Environment:
         Variables:
           MESSAGES_DYNAMODB_TABLE: !Ref MessagesDynamoDBTable
+          REQUEST_SESSION_DYNAMODB_TABLE: !Ref RequestSessionDynamoDBTable
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref MessagesDynamoDBTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RequestSessionDynamoDBTable
 
   GetDeviceLambdaFunction:
     Type: AWS::Serverless::Function
@@ -148,9 +177,12 @@ Resources:
       Environment:
         Variables:
           DEVICES_DYNAMODB_TABLE: !Ref DevicesDynamoDBTable
+          REQUEST_SESSION_DYNAMODB_TABLE: !Ref RequestSessionDynamoDBTable
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref DevicesDynamoDBTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RequestSessionDynamoDBTable
 
   AllDevicesLambdaFunction:
     Type: AWS::Serverless::Function
@@ -160,9 +192,12 @@ Resources:
       Environment:
         Variables:
           DEVICES_DYNAMODB_TABLE: !Ref DevicesDynamoDBTable
+          REQUEST_SESSION_DYNAMODB_TABLE: !Ref RequestSessionDynamoDBTable
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref DevicesDynamoDBTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RequestSessionDynamoDBTable
 
   # AppSync Data Sources
 
@@ -247,6 +282,7 @@ Resources:
           "operation": "Invoke",
           "payload": {
             "identity": $utils.toJson($context.identity),
+            "request": $utils.toJson($context.request),
           }
         }
       ResponseMappingTemplate: |
@@ -272,7 +308,8 @@ Resources:
           "operation": "Invoke",
           "payload": {
             "arguments": $utils.toJson($ctx.args),
-            "identity": $utils.toJson($context.identity)
+            "identity": $utils.toJson($context.identity),
+            "request": $utils.toJson($context.request),
           }
         }
       ResponseMappingTemplate: $util.toJson($context.result)
@@ -291,7 +328,8 @@ Resources:
           "operation": "Invoke",
           "payload": {
             "arguments": $utils.toJson($ctx.args),
-            "identity": $utils.toJson($context.identity)
+            "identity": $utils.toJson($context.identity),
+            "request": $utils.toJson($context.request),
           }
         }
       ResponseMappingTemplate: $utils.toJson($context.result)
@@ -310,7 +348,8 @@ Resources:
           "operation": "Invoke",
           "payload": {
             "arguments": $utils.toJson($ctx.args),
-            "identity": $utils.toJson($context.identity)
+            "identity": $utils.toJson($context.identity),
+            "request": $utils.toJson($context.request),
           }
         }
       ResponseMappingTemplate: $utils.toJson($context.result)
@@ -324,7 +363,6 @@ Resources:
       FieldName: getDevice
       RequestMappingTemplate: "{}"
       ResponseMappingTemplate: |
-        $util.qr($context.result.put("user", $context.stash.user))
         $util.toJson($context.result)
       Kind: PIPELINE
       PipelineConfig:
@@ -346,7 +384,7 @@ Resources:
           "payload": {
             "arguments": $utils.toJson($context.arguments),
             "identity": $utils.toJson($context.identity),
-            "user": $utils.toJson($context.stash.user),
+            "request": $utils.toJson($context.request),
           }
         }
       ResponseMappingTemplate: |
@@ -372,8 +410,7 @@ Resources:
           "payload": {
             "arguments": $utils.toJson($ctx.source),
             "identity": $utils.toJson($context.identity),
-            "user": $utils.toJson($ctx.source.user),
-            "request": $utils.toJson($ctx.request),
+            "request": $utils.toJson($context.request),
           }
         }
       ResponseMappingTemplate: $util.toJson($context.result)
@@ -387,7 +424,6 @@ Resources:
       FieldName: allDevices
       RequestMappingTemplate: "{}"
       ResponseMappingTemplate: |
-        $util.qr($context.result.put("user", $context.stash.user))
         $util.toJson($context.result)
       Kind: PIPELINE
       PipelineConfig:
@@ -409,8 +445,7 @@ Resources:
           "payload": {
             "arguments": $utils.toJson($context.arguments),
             "identity": $utils.toJson($context.identity),
-            "user": $utils.toJson($context.stash.user),
-            "request": $utils.toJson($ctx.request),
+            "request": $utils.toJson($context.request),
           }
         }
       ResponseMappingTemplate: |

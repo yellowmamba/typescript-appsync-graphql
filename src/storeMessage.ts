@@ -3,9 +3,11 @@
 import {DynamoDB} from 'aws-sdk';
 import bunyan from 'bunyan';
 import {configureDynamoDB} from './utils/lambdaConfig'
+import {getUserFromRequestSession} from './utils/requestSession'
 
 const dynamodb = configureDynamoDB();
 const TableName = process.env.MESSAGES_DYNAMODB_TABLE || '';
+const RequestSessionTableName = process.env.REQUEST_SESSION_DYNAMODB_TABLE || '';
 const logger = bunyan.createLogger({name: "storeMessageLambda"});
 
 export interface StoreMessageEventInput {
@@ -14,7 +16,8 @@ export interface StoreMessageEventInput {
         message: string,
         messageType: string
     },
-    identity: any
+    identity: any,
+    request: any
 }
 
 interface Message {
@@ -38,7 +41,11 @@ const constructMessageData = (messageInputData: StoreMessageEventInput): Message
 }
 
 export const handler = async (event: StoreMessageEventInput): Promise<any> => {
-    logger.info(`Storing message to: ${TableName}`);
+    logger.info(event);
+    const requestTraceId: string = event.request.headers['x-amzn-trace-id']
+    const user = await getUserFromRequestSession(RequestSessionTableName, requestTraceId)
+    logger.info({user: user})
+
     const messageData = constructMessageData(event);
 
     const dbParams: DynamoDB.DocumentClient.PutItemInput = {

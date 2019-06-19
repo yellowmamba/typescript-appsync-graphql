@@ -3,9 +3,11 @@
 import {DynamoDB} from 'aws-sdk';
 import bunyan from 'bunyan';
 import {configureDynamoDB} from './utils/lambdaConfig'
+import {getUserFromRequestSession} from './utils/requestSession'
 
 const dynamodb = configureDynamoDB();
-const TableName = process.env.DEVICES_DYNAMODB_TABLE|| '';
+const TableName = process.env.DEVICES_DYNAMODB_TABLE || '';
+const RequestSessionTableName = process.env.REQUEST_SESSION_DYNAMODB_TABLE || '';
 const logger = bunyan.createLogger({name: "allDevicesLambda"});
 
 export interface AllDevicesEventInput {
@@ -13,11 +15,14 @@ export interface AllDevicesEventInput {
         nextToken?: string
     },
     identity: any,
-    user: any
+    request: any
 }
 
 export const handler = async (event:AllDevicesEventInput): Promise<any> => {
     logger.info(event);
+    const requestTraceId: string = event.request.headers['x-amzn-trace-id']
+    const user = await getUserFromRequestSession(RequestSessionTableName, requestTraceId)
+    logger.info({user: user})
 
     const dbParams: DynamoDB.DocumentClient.ScanInput = {
         TableName
@@ -29,9 +34,6 @@ export const handler = async (event:AllDevicesEventInput): Promise<any> => {
         const paginatedResults = {
             items: data.Items,
             nextToken: "TOKEN1234",
-        }
-        if (paginatedResults.items) {
-            paginatedResults.items.forEach( (i: any) => { i.user = event.user; });
         }
         logger.info('Successfully got device results', paginatedResults);
         return paginatedResults;
