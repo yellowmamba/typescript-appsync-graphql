@@ -11,6 +11,7 @@ type Query {
 }
 
 type Mutation {
+    # Stores a message for a device in DynamoDB. Returns an error if device creation fails
     storeMessage(deviceId: String!, message: String!, messageType: String!): Message
 }
 

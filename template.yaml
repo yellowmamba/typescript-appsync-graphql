@@ -352,7 +352,17 @@ Resources:
             "request": $utils.toJson($context.request),
           }
         }
-      ResponseMappingTemplate: $utils.toJson($context.result)
+      ResponseMappingTemplate: |
+        ## Raise a GraphQL field error in case of a datasource invocation error
+        #if($ctx.error)
+          $util.error($context.error.message, $context.error.type)
+        #end
+        ## Custom error if messae storing fails
+        #if ($ctx.result.error)
+          $util.error($context.result.cause, $context.result.error)
+        #end
+        ## Pass back the result from Lambda. **
+        $utils.toJson($context.result)
 
   GetDeviceQueryResolver:
     Type: AWS::AppSync::Resolver

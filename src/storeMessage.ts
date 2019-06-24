@@ -27,6 +27,11 @@ interface Message {
     messageType: string
 }
 
+interface CustomError {
+    error: string,
+    cause: string
+}
+
 /**
  * Adds a timestamp to the incoming message data
  * @param messageInputData
@@ -53,10 +58,20 @@ export const handler = async (event: StoreMessageEventInput): Promise<any> => {
         Item: messageData
     };
 
+    // Simulate a device that doesn't exist in the database
+    if (event.arguments.deviceId === "fake") {
+        const e: CustomError = {
+            error: "404",
+            cause: 'No device exists with this deviceId'
+        }
+        return e
+    }
+
     try {
         await dynamodb.put(dbParams).promise();
         logger.info('Successfully stored message:', dbParams);
-        return dbParams.Item;
+        return dbParams.Item
+
     } catch (err) {
         logger.error('ERROR:', err);
         return err;
